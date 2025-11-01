@@ -2,44 +2,517 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Ask Gemini 🤖</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gemini AI Chatbot 🤖</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-      body { font-family: sans-serif; text-align:center; padding:50px; background:#638db2;}
-      input { width:300px; padding:10px; border-radius:8px; border:1px solid #ccc; }
-      button { padding:10px 15px; margin-left:10px; background:#b540b5; color:black; border:none; border-radius:8px; cursor:pointer; }
-      button:hover { background:#dcdce2; }
-      #answer { margin-top:30px; font-size:18px; color:#111827; }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 900px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        height: 90vh;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        text-align: center;
+        border-bottom: 3px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .header h1 {
+        font-size: 28px;
+        margin-bottom: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+      }
+
+      .header p {
+        font-size: 14px;
+        opacity: 0.9;
+        font-weight: 300;
+      }
+
+      .chat-container {
+        flex: 1;
+        overflow-y: auto;
+        padding: 25px;
+        background: #f8f9fa;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+      }
+
+      .message {
+        display: flex;
+        animation: slideIn 0.3s ease-out;
+      }
+
+      @keyframes slideIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .message.user {
+        justify-content: flex-end;
+      }
+
+      .message.bot {
+        justify-content: flex-start;
+      }
+
+      .message-content {
+        max-width: 70%;
+        padding: 14px 18px;
+        border-radius: 18px;
+        line-height: 1.5;
+        word-wrap: break-word;
+        font-size: 15px;
+      }
+
+      .user .message-content {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom-right-radius: 4px;
+      }
+
+      .bot .message-content {
+        background: #e9ecef;
+        color: #333;
+        border-bottom-left-radius: 4px;
+      }
+
+      .input-section {
+        padding: 20px;
+        background: white;
+        border-top: 1px solid #e0e0e0;
+        display: flex;
+        gap: 12px;
+        align-items: flex-end;
+      }
+
+      .input-wrapper {
+        flex: 1;
+        display: flex;
+        gap: 10px;
+        align-items: flex-end;
+      }
+
+      #question {
+        flex: 1;
+        padding: 14px 16px;
+        border: 2px solid #e0e0e0;
+        border-radius: 25px;
+        font-size: 15px;
+        font-family: inherit;
+        transition: all 0.3s ease;
+        outline: none;
+        resize: none;
+        max-height: 100px;
+      }
+
+      #question:focus {
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      #question::placeholder {
+        color: #999;
+      }
+
+      .btn-send {
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 25px;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        white-space: nowrap;
+      }
+
+      .btn-send:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+      }
+
+      .btn-send:active {
+        transform: translateY(0);
+      }
+
+      .btn-send.loading {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
+
+      .btn-clear {
+        padding: 10px 16px;
+        background: #f0f0f0;
+        color: #666;
+        border: none;
+        border-radius: 20px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .btn-clear:hover {
+        background: #e0e0e0;
+        color: #333;
+      }
+
+      .thinking {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 18px;
+        background: #e9ecef;
+        border-radius: 18px;
+        color: #666;
+        font-size: 14px;
+      }
+
+      .dot {
+        height: 8px;
+        width: 8px;
+        border-radius: 50%;
+        background-color: #667eea;
+        animation: bounce 1.4s infinite;
+      }
+
+      .dot:nth-child(2) {
+        animation-delay: 0.2s;
+      }
+
+      .dot:nth-child(3) {
+        animation-delay: 0.4s;
+      }
+
+      @keyframes bounce {
+        0%, 80%, 100% {
+          opacity: 0.3;
+          transform: translateY(0);
+        }
+        40% {
+          opacity: 1;
+          transform: translateY(-10px);
+        }
+      }
+
+      .error-message {
+        background: #ffe0e0;
+        color: #d32f2f;
+        padding: 14px 18px;
+        border-radius: 18px;
+        border-left: 4px solid #d32f2f;
+      }
+
+      .welcome-message {
+        text-align: center;
+        padding: 40px 20px;
+        color: #999;
+      }
+
+      .welcome-message h2 {
+        font-size: 24px;
+        margin-bottom: 12px;
+        color: #667eea;
+      }
+
+      .welcome-message p {
+        font-size: 14px;
+        margin-bottom: 20px;
+      }
+
+      .suggestion-chips {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+      }
+
+      .chip {
+        padding: 8px 14px;
+        background: white;
+        border: 2px solid #667eea;
+        color: #667eea;
+        border-radius: 20px;
+        font-size: 13px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .chip:hover {
+        background: #667eea;
+        color: white;
+        transform: translateY(-2px);
+      }
+
+      @media (max-width: 600px) {
+        .container {
+          height: 100vh;
+          border-radius: 0;
+        }
+
+        .header {
+          padding: 20px;
+        }
+
+        .header h1 {
+          font-size: 22px;
+        }
+
+        .message-content {
+          max-width: 85%;
+        }
+
+        .input-section {
+          flex-direction: column;
+        }
+
+        .input-wrapper {
+          width: 100%;
+        }
+
+        .btn-send {
+          width: 100%;
+          justify-content: center;
+        }
+
+        .btn-clear {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+
+      ::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #667eea;
+        border-radius: 10px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #764ba2;
+      }
     </style>
   </head>
   <body>
-    <h1>Ask Gemini 🤖</h1>
-    <input id="question" placeholder="Type your question..." onkeypress="handleEnter(event)" />
-    <button onclick="askGemini()">Ask</button>
-    <div id="answer"></div>
+    <div class="container">
+      <div class="header">
+        <h1>
+          <i class="fas fa-brain"></i>
+          Gemini AI Assistant
+        </h1>
+        <p>Powered by Google Gemini 2.5 Pro</p>
+      </div>
+
+      <div class="chat-container" id="chatContainer">
+        <div class="welcome-message">
+          <h2>Welcome! 👋</h2>
+          <p>Ask me anything and I'll help you with smart answers.</p>
+          <div class="suggestion-chips">
+            <div class="chip" onclick="suggestQuestion('What is artificial intelligence?')">
+              <i class="fas fa-lightbulb"></i> What is AI?
+            </div>
+            <div class="chip" onclick="suggestQuestion('Explain quantum computing')">
+              <i class="fas fa-atom"></i> Quantum Computing
+            </div>
+            <div class="chip" onclick="suggestQuestion('Tell me a fun fact')">
+              <i class="fas fa-star"></i> Fun Fact
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-section">
+        <div class="input-wrapper">
+          <textarea 
+            id="question" 
+            placeholder="Type your question here... (Press Enter to send)"
+            onkeypress="handleEnter(event)"
+            rows="1"
+          ></textarea>
+          <button class="btn-clear" onclick="clearChat()" title="Clear chat">
+            <i class="fas fa-trash-alt"></i>
+          </button>
+        </div>
+        <button class="btn-send" id="sendBtn" onclick="askGemini()">
+          <i class="fas fa-paper-plane"></i> Send
+        </button>
+      </div>
+    </div>
 
     <script>
+      const chatContainer = document.getElementById('chatContainer');
+      const questionInput = document.getElementById('question');
+      const sendBtn = document.getElementById('sendBtn');
+      let isLoading = false;
+
       function handleEnter(event) {
-        if (event.key === 'Enter') {
+        if (event.key === 'Enter' && !event.shiftKey) {
+          event.preventDefault();
           askGemini();
         }
       }
 
-      async function askGemini() {
-        const question = document.getElementById("question").value.trim();
-        if(!question) return alert("Please type a question!");
-        document.getElementById("answer").innerText = "Thinking...";
-        try {
-          const res = await fetch("http://localhost:5004/ask", {
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body:JSON.stringify({question})
-          });
-          const data = await res.json();
-          document.getElementById("answer").innerText = data.answer || "Error: "+data.error;
-        } catch(error) {
-          document.getElementById("answer").innerText = "Error: " + error.message;
+      function suggestQuestion(question) {
+        questionInput.value = question;
+        questionInput.focus();
+      }
+
+      function clearChat() {
+        if (confirm('Are you sure you want to clear the chat?')) {
+          chatContainer.innerHTML = `
+            <div class="welcome-message">
+              <h2>Welcome! 👋</h2>
+              <p>Ask me anything and I'll help you with smart answers.</p>
+              <div class="suggestion-chips">
+                <div class="chip" onclick="suggestQuestion('What is artificial intelligence?')">
+                  <i class="fas fa-lightbulb"></i> What is AI?
+                </div>
+                <div class="chip" onclick="suggestQuestion('Explain quantum computing')">
+                  <i class="fas fa-atom"></i> Quantum Computing
+                </div>
+                <div class="chip" onclick="suggestQuestion('Tell me a fun fact')">
+                  <i class="fas fa-star"></i> Fun Fact
+                </div>
+              </div>
+            </div>
+          `;
         }
       }
+
+      async function askGemini() {
+        const question = questionInput.value.trim();
+        if (!question) {
+          alert('Please type a question!');
+          return;
+        }
+
+        if (isLoading) return;
+
+        // Remove welcome message on first question
+        const welcomeMsg = chatContainer.querySelector('.welcome-message');
+        if (welcomeMsg) welcomeMsg.remove();
+
+        // Add user message
+        addMessage(question, 'user');
+        questionInput.value = '';
+        questionInput.style.height = 'auto';
+
+        // Show thinking indicator
+        isLoading = true;
+        sendBtn.classList.add('loading');
+        sendBtn.disabled = true;
+
+        const thinkingDiv = document.createElement('div');
+        thinkingDiv.className = 'message bot';
+        thinkingDiv.innerHTML = `
+          <div class="thinking">
+            <span>Thinking</span>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        `;
+        chatContainer.appendChild(thinkingDiv);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+        try {
+          const res = await fetch('http://localhost:5004/ask', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ question })
+          });
+
+          thinkingDiv.remove();
+
+          const data = await res.json();
+
+          if (data.answer) {
+            addMessage(data.answer, 'bot');
+          } else {
+            addMessage('Error: ' + (data.error || 'Unknown error occurred'), 'error');
+          }
+        } catch (error) {
+          thinkingDiv.remove();
+          addMessage('Error: ' + error.message + '. Make sure the backend is running.', 'error');
+        } finally {
+          isLoading = false;
+          sendBtn.classList.remove('loading');
+          sendBtn.disabled = false;
+          questionInput.focus();
+        }
+      }
+
+      function addMessage(text, type) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${type}`;
+
+        const contentDiv = document.createElement('div');
+        contentDiv.className = `message-content${type === 'error' ? ' error-message' : ''}`;
+        contentDiv.textContent = text;
+
+        messageDiv.appendChild(contentDiv);
+        chatContainer.appendChild(messageDiv);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }
+
+      // Auto-resize textarea
+      questionInput.addEventListener('input', function () {
+        this.style.height = 'auto';
+        this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+      });
+
+      // Focus on load
+      window.addEventListener('load', () => {
+        questionInput.focus();
+      });
     </script>
   </body>
 </html>
